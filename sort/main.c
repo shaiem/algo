@@ -12,8 +12,15 @@
 #include <errno.h>
 #include <getopt.h>
 #include <unistd.h>
-#include <pthread.h>
+#include <time.h>
+#include <string.h>
 #include "main.h"
+#include "common.h"
+
+static struct algo_func algo[] = {
+    { .name = "bubble", .sort = bubble_sort},
+    { /* Sentinel */ },
+};
 
 void print_help_info(void)
 {
@@ -24,25 +31,44 @@ void print_help_info(void)
     printf("    --min             Specify the min number of array, default is -2147483648\n");
     printf("    --algo            Specify a sort algorithm, this parameter can be\n");
     printf("                      bubble, ...\n");
-    /* TODO */
 }
 
-int prepare_random_array(struct sort_data *sd, int max, int min)
+int prepare_random_array(struct sort_data *sd)
 {
     int ret = 0;
-
-    if ((!sd) || (max <= min)) 
+    int i = 0;
+    struct timespec time;
+    if (!sd) 
         return -EFAULT;
+
+    sd->data = (int *)malloc(sizeof(int)*(sd->size));
+    if (!sd->data) {
+        return -ENOMEM;
+    }
+    
+    for (; i != sd->size; ++i) {
+        clock_gettime(CLOCK_MONOTONIC, &time);
+        srand(time.tv_nsec);
+        (sd->data)[i] = rand() % (MAX - MIN + 1) + MIN;
+    }
     
     return ret;
+}
+
+sort_func_t sort_init(char *name)
+{
+    int i = 0;
+    for (; algo[i].name != NULL; ++i) {
+        if (!strcmp(name, algo[i].name))
+            return algo[i].sort;
+    }
+    return NULL;
 }
 
 static int lopt = 0;
 static struct option opts[] = {
 	{"size",	    required_argument,	NULL,	's'},
 	{"algo",		required_argument,	&lopt,	'1'},
-    {"max",		    required_argument,	&lopt,	'2'},
-    {"min",		    required_argument,	&lopt,	'3'},
 	{"help",		no_argument,		NULL,	'h'},
 	{ /* Sentinel */ },
 };
@@ -53,6 +79,7 @@ int main(int argc, char **argv)
     int ret = 0;
     int max = 2147483647, min = -2147483648;
     struct sort_data *sd = NULL;
+    sort_func_t sort;
 
     sd = (struct sort_data *)malloc(sizeof(struct sort_data));
     if (!sd)
@@ -64,12 +91,7 @@ int main(int argc, char **argv)
                 switch (lopt) {
                     case '1':
                         /* TODO */
-                        break;
-                    case '2':
-                        max = atoi(optarg);
-                        break;
-                    case '3':
-                        min = atoi(optarg);
+                        sort = sort_init(optarg);
                         break;
                     default:
                         break;
@@ -86,17 +108,29 @@ int main(int argc, char **argv)
             }
     }
 
-    ret = prepare_random_array(sd, max, min);
+    ret = prepare_random_array(sd);
     if (ret < 0) {
         ret = -ENOMEM;
         goto fail_gen_arr;
     }
+    dump_array(sd);
+
+    ret = sort(sd);
+
+    dump_array(sd);
+
     
-    free(sd);
+    if (sd->data) 
+        free(sd->data);
+    if (sd)
+        free(sd);
+    return ret;
 
 fail_gen_arr:
     /* TODO */
     /* release array */
+    if (sd->data)
+        free(sd->data);
     if (sd)
         free(sd);
 
