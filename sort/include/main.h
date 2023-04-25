@@ -4,8 +4,8 @@
 typedef int (*sort)(void *data);
 
 struct sort_data {
-    int data[];
+    int *data;
     size_t size;
-}
+};
 
 #endif  /* _MAIN_H */
