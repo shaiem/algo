@@ -90,7 +90,6 @@ int main(int argc, char **argv)
             case 0: 
                 switch (lopt) {
                     case '1':
-                        /* TODO */
                         sort = sort_init(optarg);
                         break;
                     default:
@@ -116,9 +115,7 @@ int main(int argc, char **argv)
     dump_array(sd);
 
     ret = sort(sd);
-
     dump_array(sd);
-
     
     if (sd->data) 
         free(sd->data);
@@ -127,8 +124,6 @@ int main(int argc, char **argv)
     return ret;
 
 fail_gen_arr:
-    /* TODO */
-    /* release array */
     if (sd->data)
         free(sd->data);
     if (sd)

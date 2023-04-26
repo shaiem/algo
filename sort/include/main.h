@@ -18,7 +18,6 @@ struct algo_func {
     sort_func_t sort;
 };
 
-
 extern int bubble_sort(void *data);
 
 #endif  /* _MAIN_H */
