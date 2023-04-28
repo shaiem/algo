@@ -77,7 +77,6 @@ int main(int argc, char **argv)
 {
     char ch = 0;
     int ret = 0;
-    int max = 2147483647, min = -2147483648;
     struct sort_data *sd = NULL;
     sort_func_t sort;
 
